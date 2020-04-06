@@ -1,14 +1,14 @@
 import * as pull from 'pull-stream'
 import looper from './looper'
 
-type Event = 'data' | 'end' | 'error'
-type QueueElem<Out> = Out | null
-interface Emitter<In, Out> {
+export type Event = 'data' | 'end' | 'error'
+export type QueueElem<Out> = Out | null
+export interface Emitter<In, Out> {
   emit: (event: Event, data: In | pull.EndOrError) => void
   queue: (data: QueueElem<Out>) => void
 }
-type Writer<In, Out> = (this: Emitter<In, Out>, data: In) => void
-type Ender<In, Out> = (this: Emitter<In, Out>) => void
+export type Writer<In, Out> = (this: Emitter<In, Out>, data: In) => void
+export type Ender<In, Out> = (this: Emitter<In, Out>) => void
 
 export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out>) {
   return function(read: pull.Source<In>) {
