@@ -8,7 +8,7 @@ export interface Emitter<In, Out> {
   queue: (data: QueueElem<Out>) => void
 }
 export type Writer<In, Out> = (this: Emitter<In, Out>, data: In) => void
-export type Ender<In, Out> = (this: Emitter<In, Out>) => void
+export type Ender<In, Out> = (this: Emitter<In, Out>, ended: pull.EndOrError) => void
 
 export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out>) {
   return function(read: pull.Source<In>) {
@@ -44,7 +44,7 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
 
     ender =
       ender ??
-      function() {
+      function(_) {
         this.queue(null)
       }
 
@@ -84,7 +84,7 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
             }
             ended = ended ?? end
             if (ended) {
-              ender!.call(emitter)
+              ender!.call(emitter, ended)
             } else if (data !== undefined && data !== null) {
               writer!.call(emitter, data)
 
