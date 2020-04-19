@@ -51,7 +51,7 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
     let _cb: pull.SourceCallback<Out> | null
 
     return function readForSink(end: pull.EndOrError, cb: pull.SourceCallback<Out>) {
-      ended = ended ?? end
+      ended = ended || end
       if (end) {
         return read(end, function() {
           // process previous cb first
@@ -82,7 +82,7 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
               error = end
               return next()
             }
-            ended = ended ?? end
+            ended = ended || end
             if (ended) {
               ender!.call(emitter, ended)
             } else if (data !== undefined && data !== null) {
