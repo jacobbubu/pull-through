@@ -51,6 +51,7 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
     let _cb: pull.SourceCallback<Out> | null
 
     return function readForSink(end: pull.EndOrError, cb: pull.SourceCallback<Out>) {
+      // downstream priority, first deal with downstream abortion needs
       ended = ended || end
       if (end) {
         return read(end, function() {
@@ -63,36 +64,43 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
           cb(end)
         })
       }
+
       _cb = cb
+
       const next = looper(function() {
-        // if it's an error
         if (!_cb) return
-        cb = _cb
+        const tempCb = _cb
+
+        // if there is an error from upstream or emitted by writer
         if (error) {
           _cb = null
-          cb(error)
+          tempCb(error)
         } else if (queue.length > 0) {
           const data = queue.shift()
           _cb = null
-          cb(data === null, data ?? undefined)
+          // end the downstream if the data is null
+          data === null ? tempCb(true) : tempCb(null, data)
         } else {
           read(ended, function(end, data) {
-            // null has no special meaning for pull-stream
             if (end && end !== true) {
+              // upstream returned an error
+              // save it and wait for the next downstream read
               error = end
               return next()
             }
+            // upstream has no more data to provide
+            // or the emitter wants to end tis through stream
             ended = ended || end
             if (ended) {
               ender!.call(emitter, ended)
             } else if (data !== undefined && data !== null) {
               writer!.call(emitter, data)
 
+              // both error and ended comes from emitter, so we need to notify upstream
               if (error || ended) {
                 return read(error || ended, function() {
                   _cb = null
-
-                  cb(error || ended)
+                  tempCb(error || ended)
                 })
               }
             }
