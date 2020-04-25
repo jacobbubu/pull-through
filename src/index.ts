@@ -89,7 +89,7 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
               return next()
             }
             // upstream has no more data to provide
-            // or the emitter wants to end tis through stream
+            // or the emitter wants to end this through stream
             ended = ended || end
             if (ended) {
               ender!.call(emitter, ended)
