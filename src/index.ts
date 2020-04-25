@@ -4,7 +4,7 @@ import looper from './looper'
 export type Event = 'data' | 'end' | 'error'
 export type QueueElem<Out> = Out | null
 export interface Emitter<In, Out> {
-  emit: (event: Event, data: In | pull.EndOrError) => void
+  emit: (event: Event, data?: In | pull.EndOrError) => void
   queue: (data: QueueElem<Out>) => void
 }
 export type Writer<In, Out> = (this: Emitter<In, Out>, data: In) => void
