@@ -76,13 +76,13 @@
     "singleQuote": true
   },
   "devDependencies": {
-    "@jacobbubu/pull-stream-types": "^1.0.3",
     "@types/jest": "^24.9.1",
     "@types/node": "^13.5.0",
+    "@types/pull-stream": "^3.6.2",
     "@types/rc": "^1.1.0",
     "@types/shelljs": "^0.8.6",
     "colors": "^1.4.0",
-    "commitizen": "^4.0.3",
+    "commitizen": "^4.1.5",
     "coveralls": "^3.0.9",
     "cross-env": "^7.0.0",
     "cz-conventional-changelog": "^3.0.2",
