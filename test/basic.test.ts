@@ -201,4 +201,32 @@ describe('simple', () => {
       })
     )
   })
+
+  it('through + abort before read callback', done => {
+    const source: pull.Source<number> = function(
+      abort: pull.Abort,
+      callback: pull.SourceCallback<number>
+    ) {
+      if (abort) {
+        callback(abort)
+        return
+      }
+      setTimeout(function() {
+        callback(null, 0)
+      }, 100)
+    }
+    const sink: pull.Sink<number> = function(source: pull.Source<number>) {
+      let called = false
+      source(null, function(end: pull.EndOrError, _?: number) {
+        called = true
+        expect(end).toBeTruthy()
+      })
+      source(true, function(end: pull.EndOrError, _?: number) {
+        expect(called).toBe(true)
+        expect(end).toBeTruthy()
+        done()
+      })
+    }
+    pull(source, through(), sink)
+  })
 })

@@ -1,27 +1,27 @@
-import * as pull from 'pull-stream'
-import looper from './looper'
+import * as Pull from 'pull-stream'
+import looper from '@jacobbubu/looper'
 
 export type Event = 'data' | 'end' | 'error'
 export type QueueElem<Out> = Out | null
 export interface Emitter<In, Out> {
-  emit: (event: Event, data?: In | pull.EndOrError) => void
+  emit: (event: Event, data?: In | Pull.EndOrError) => void
   queue: (data: QueueElem<Out>) => void
 }
 export type Writer<In, Out> = (this: Emitter<In, Out>, data: In) => void
-export type Ender<In, Out> = (this: Emitter<In, Out>, ended: pull.EndOrError) => void
+export type Ender<In, Out> = (this: Emitter<In, Out>, ended: Pull.EndOrError) => void
 
 export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out>) {
-  return function(read: pull.Source<In>) {
+  return function(read: Pull.Source<In>) {
     const queue: QueueElem<Out>[] = []
-    let ended: pull.EndOrError
-    let error: pull.EndOrError
+    let ended: Pull.EndOrError
+    let error: Pull.EndOrError
 
     function enqueue(data: QueueElem<Out>) {
       queue.push(data)
     }
 
     const emitter: Emitter<In, Out> = {
-      emit: function(event, data) {
+      emit: function(event: Event, data?: In | Pull.EndOrError) {
         if (event === 'data') {
           enqueue((data as any) as Out)
         }
@@ -30,7 +30,7 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
           enqueue(null)
         }
         if (event === 'error') {
-          error = data as pull.EndOrError
+          error = data as Pull.EndOrError
         }
       },
       queue: enqueue
@@ -48,9 +48,9 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
         this.queue(null)
       }
 
-    let _cb: pull.SourceCallback<Out> | null
+    let _cb: Pull.SourceCallback<Out> | null
 
-    return function readForSink(end: pull.EndOrError, cb: pull.SourceCallback<Out>) {
+    return function readForSink(end: Pull.EndOrError, cb: Pull.SourceCallback<Out>) {
       // downstream priority, first deal with downstream abortion needs
       ended = ended || end
       if (end) {
@@ -70,7 +70,6 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
       const next = looper(function() {
         if (!_cb) return
         const tempCb = _cb
-
         // if there is an error from upstream or emitted by writer
         if (error) {
           _cb = null
@@ -81,7 +80,7 @@ export default function<In, Out>(writer?: Writer<In, Out>, ender?: Ender<In, Out
           // end the downstream if the data is null
           data === null ? tempCb(true) : tempCb(null, data)
         } else {
-          read(ended, function(end, data) {
+          read(ended, function(end: Pull.EndOrError, data?: In) {
             if (end && end !== true) {
               // upstream returned an error
               // save it and wait for the next downstream read
